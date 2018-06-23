@@ -5,6 +5,7 @@ namespace AppBundle\Controller;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 use Sunra\PhpSimple\HtmlDomParser;
+use GuzzleHttp\Exception\ConnectException;
 use Goutte\Client;
 use GuzzleHttp\Client as GuzzleClient;
 
@@ -24,9 +25,7 @@ class SitesController
 
         // setea web crawler
         $this->goutteClient = new Client();
-        $guzzleClient = new GuzzleClient(array(
-            'timeout' => 60,
-        ));
+        $guzzleClient = new GuzzleClient([ 'verify' => false, 'exceptions' => false, 'timeout' => 20 ]);
 
         $this->goutteClient->setClient($guzzleClient);
     }
@@ -37,16 +36,19 @@ class SitesController
         $this->keywords = array("news", "noticias"); // @TODO: mover al config de la aplicación
 
         $json_file = file_get_contents("sites.json");
-
         $sites = json_decode($json_file, true);
-        foreach($sites as $site) {
-            if($this->isMarfeeable($site['url'])) {
-                // agrego a la base de datos
-                
-            }
-        }
 
-        die;
+        foreach($sites as $jsonSite) {
+            $isMarfeeable = $this->isMarfeeable($jsonSite['url']);
+
+            // persisto el sitio
+            // @todo agregar funcion al repositorio
+            $site = new Site();
+            $site->setUrl($jsonSite['url']);
+            $site->setIsmarfeeable($isMarfeeable);
+            $this->entityManager->persist($site);
+            $this->entityManager->flush();
+        }
     }
 
     /**
@@ -57,17 +59,21 @@ class SitesController
      *
      */
     private function isMarfeeable($url) {
-        $crawler = $this->goutteClient->request('GET', $url);
+        try {
+            $crawler = $this->goutteClient->request('GET', $this->addHttp($url));
+        } catch (ConnectException $e) {
+            return false;
+        }
 
-        $keywordsFound = 0;
         // parsea todos los tags "title" de la respuesta y busca las keywords
         // @TODO: es redundante porque title debería aparecer solo una vez...
+        $keywordsFound = 0;
         foreach($crawler->filter('title') as $title) {
             $keywordsFound += $this->countKeywords($title->nodeValue, $this->keywords);
         }
 
         // se encontraron las keywords?
-        if(count($keywordsFound) > 0) {
+        if($keywordsFound > 0) {
             return true;
         }
 
@@ -89,6 +95,13 @@ class SitesController
             }
         }
         return $keywordsFound;
+    }
+
+    private function addhttp($url) {
+        if (!preg_match("~^(?:f|ht)tps?://~i", $url)) {
+            $url = "http://" . $url;
+        }
+        return $url;
     }
 
 }

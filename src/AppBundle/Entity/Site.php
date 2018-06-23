@@ -31,5 +31,62 @@ class Site
     {
         return $this->id;
     }
-}
+    /**
+     * @var string
+     */
+    private $url;
 
+    /**
+     * @var boolean
+     */
+    private $ismarfeeable;
+
+
+    /**
+     * Set url
+     *
+     * @param string $url
+     *
+     * @return Site
+     */
+    public function setUrl($url)
+    {
+        $this->url = $url;
+
+        return $this;
+    }
+
+    /**
+     * Get url
+     *
+     * @return string
+     */
+    public function getUrl()
+    {
+        return $this->url;
+    }
+
+    /**
+     * Set ismarfeeable
+     *
+     * @param boolean $ismarfeeable
+     *
+     * @return Site
+     */
+    public function setIsmarfeeable($ismarfeeable)
+    {
+        $this->ismarfeeable = $ismarfeeable;
+
+        return $this;
+    }
+
+    /**
+     * Get ismarfeeable
+     *
+     * @return boolean
+     */
+    public function getIsmarfeeable()
+    {
+        return $this->ismarfeeable;
+    }
+}
