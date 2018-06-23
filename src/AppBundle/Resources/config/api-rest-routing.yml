@@ -1,4 +1,4 @@
-api_users:
+api_sites:
      type: rest
-     resource: "@AppBundle/Controller/UsersController.php"
-     name_prefix:  api_users_
+     resource: "@AppBundle/Controller/SitesController.php"
+     name_prefix:  api_sites_
